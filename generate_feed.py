@@ -4,7 +4,6 @@ import requests
 from requests_oauthlib import OAuth1
 from html import unescape
 
-# Auth setup
 auth = OAuth1(
     os.environ['BL_CONSUMER_KEY'],
     os.environ['BL_CONSUMER_SECRET'],
@@ -12,7 +11,6 @@ auth = OAuth1(
     os.environ['BL_TOKEN_SECRET']
 )
 
-# BrickLink colour ID → name
 color_lookup = {
     0: "Black", 1: "Blue", 2: "Green", 3: "Dark Turquoise", 4: "Red", 5: "Dark Pink", 6: "Brown",
     7: "Tan", 8: "Yellow", 9: "White", 10: "Orange", 11: "Light Gray", 12: "Gray", 13: "Light Blue",
@@ -32,7 +30,7 @@ type_labels = {"P": "Part", "M": "Minifig", "S": "Set"}
 
 def get_inventory():
     all_items = []
-    for page in range(1, 2):  # 1 page limit for testing
+    for page in range(1, 2):  # LIMIT TO 1 PAGE FOR TESTING
         r = requests.get(f"https://api.bricklink.com/api/store/v1/inventories?page={page}", auth=auth)
         if r.status_code != 200:
             print(f"❌ Error fetching page {page}: {r.status_code}")
@@ -56,10 +54,26 @@ def safe_price(value):
     except Exception:
         return ""
 
-# 🔁 Get inventory
+def resolve_image_url(part_no, color_id):
+    # Try 4 common image variants
+    base = f"https://img.bricklink.com/ItemImage/PL/{color_id}/{part_no}"
+    variants = [".png", ".t1.png", ".jpg", ".JPG"]
+
+    for suffix in variants:
+        url = base + suffix
+        try:
+            r = requests.head(url)
+            if r.status_code == 200:
+                print(f"✅ Found image: {url}")
+                return url
+        except Exception as e:
+            print(f"❌ Error checking image {url}: {e}")
+
+    # Final fallback
+    return "https://via.placeholder.com/300x300?text=No+Image"
+
 inventory = get_inventory()
 
-# 📤 Write CSV
 with open("meta_product_feed.csv", "w", newline='', encoding="utf-8") as f:
     writer = csv.DictWriter(f, fieldnames=[
         "id", "title", "description", "availability", "condition",
@@ -89,10 +103,8 @@ with open("meta_product_feed.csv", "w", newline='', encoding="utf-8") as f:
         description = f"{type_labels.get(part_type, part_type)} - {part_no}"
         title = f"{color} {name}"
 
-        image_url = f"https://img.bricklink.com/ItemImage/PL/{color_id}/{part_no}.png"
-        fallback_image = f"https://www.bricklink.com/catalogItemPic.asp?P={part_no}"
+        image_url = resolve_image_url(part_no, color_id)
 
-        # URL for the product on your store
         link = f"https://store.bricklink.com/luke.donohoe#/shop?o={{\"q\":\"{inventory_id}\",\"sort\":0,\"pgSize\":100,\"showHomeItems\":0}}"
 
         writer.writerow({
@@ -111,6 +123,5 @@ with open("meta_product_feed.csv", "w", newline='', encoding="utf-8") as f:
             "quantity_to_sell_on_facebook": quantity
         })
 
-# 📄 Redirect for GitHub Pages
 with open("index.html", "w") as f:
     f.write("<!DOCTYPE html><html><head><meta http-equiv='refresh' content='0; url=meta_product_feed.csv'></head><body></body></html>")
