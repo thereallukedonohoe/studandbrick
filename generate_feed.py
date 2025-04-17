@@ -19,7 +19,7 @@ type_labels = {
 
 def get_inventory():
     all_items = []
-    for page in range(1, 2):  # Limit to 1 page for testing
+    for page in range(1, 2):  # Limit to 1 page for now
         url = f"https://api.bricklink.com/api/store/v1/inventories?page={page}"
         r = requests.get(url, auth=auth)
         if r.status_code != 200:
@@ -53,7 +53,7 @@ with open("meta_product_feed.csv", "w", newline='') as f:
             "availability": "In Stock",
             "condition": "New" if item["new_or_used"] == "N" else "Used (like new)",
             "price": price,
-            "link": f"https://store.bricklink.com/luke.donohoe#/shop?o={{\"q\":\"{item['inventory_id']}\"}}",
+            "link": f"https://store.bricklink.com/luke.donohoe#/shop?o={{\"q\":\"{item['inventory_id']}\",\"sort\":0,\"pgSize\":100,\"showHomeItems\":0}}",
             "image_link": "https://via.placeholder.com/150",
             "brand": "Lego",
             "google_product_category": "3287",
