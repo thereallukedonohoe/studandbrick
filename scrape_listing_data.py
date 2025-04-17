@@ -41,7 +41,7 @@ async def run():
 
     updated = []
     async with async_playwright() as p:
-        for row in rows[:5]:  # limit for now
+        for row in rows[:5]:  # LIMIT to 5 for testing
             try:
                 result = await scrape_listing_data(p, row["id"])
                 row.update(result)
