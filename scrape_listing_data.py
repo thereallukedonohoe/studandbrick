@@ -11,8 +11,15 @@ async def scrape_listing_data(playwright, inventory_id):
     browser = await playwright.chromium.launch()
     page = await browser.new_page()
     url = f"https://store.bricklink.com/{USERNAME}#/shop?o={json.dumps({'q': str(inventory_id)})}"
+    print(f"🌐 Visiting: {url}")
     await page.goto(url)
-    await page.wait_for_selector(".itemBoxMain", timeout=15000)
+    try:
+        await page.wait_for_selector(".itemBoxMain", timeout=20000)
+    except Exception:
+        print(f"❌ No item boxes found for {inventory_id}")
+        await browser.close()
+        return None
+
     boxes = await page.query_selector_all(".itemBoxMain")
 
     for box in boxes:
@@ -31,8 +38,9 @@ async def scrape_listing_data(playwright, inventory_id):
                 "image_link": image_url
             }
 
+    print(f"⚠️ No matching listing found for inventory ID {inventory_id}")
     await browser.close()
-    raise Exception(f"No matching listing found for inventory ID {inventory_id}")
+    return None
 
 async def run():
     with open(INPUT_FILE, newline='') as f:
@@ -42,12 +50,16 @@ async def run():
     updated = []
     async with async_playwright() as p:
         for row in rows[:5]:  # LIMIT to 5 for testing
-            try:
-                result = await scrape_listing_data(p, row["id"])
+            result = await scrape_listing_data(p, row["id"])
+            if result:
                 row.update(result)
-            except Exception as e:
-                print(f"⚠️ Error on ID {row['id']}: {e}")
+            else:
+                print(f"⚠️ Skipping row for ID {row['id']}")
             updated.append(row)
+
+    if not any("title" in row and row["title"] != "PLACEHOLDER" for row in updated):
+        print("⚠️ No listings were successfully scraped. Skipping file write.")
+        return
 
     with open(OUTPUT_FILE, "w", newline='') as f:
         writer = csv.DictWriter(f, fieldnames=updated[0].keys())
