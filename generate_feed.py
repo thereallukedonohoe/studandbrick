@@ -12,20 +12,16 @@ auth = OAuth1(
 )
 
 def get_inventory():
-    all_items = []
-    page = 1
-    r = requests.get(f"https://api.bricklink.com/api/store/v1/inventories?page={page}", auth=auth)
+    r = requests.get("https://api.bricklink.com/api/store/v1/inventories?page=1", auth=auth)
     if r.status_code != 200:
-        print(f"❌ Error fetching inventory page {page}")
+        print("❌ Error fetching inventory")
         return []
-    items = r.json().get("data", [])
-    print(f"✅ Fetched {len(items)} items from page {page}")
-    return items[:5]  # ✅ Limit to 5 items only
+    return r.json().get("data", [])[:5]  # ✅ Limit to 5 items for testing
 
 def get_inventory_detail(inventory_id):
     r = requests.get(f"https://api.bricklink.com/api/store/v1/inventories/{inventory_id}", auth=auth)
     if r.status_code != 200:
-        print(f"⚠️ Failed to fetch detail for inventory {inventory_id}")
+        print(f"⚠️ Could not fetch detail for inventory ID {inventory_id}")
         return None
     return r.json().get("data", {})
 
@@ -39,18 +35,18 @@ def generate_feed():
         if not detail:
             continue
 
-        item_info = detail.get("item", {})
-        item_no = item_info.get("no")
-        item_name = unescape(item_info.get("name", ""))
-        item_type = item_info.get("type")
+        item_data = detail.get("item", {})
+        item_no = item_data.get("no")
+        item_name = unescape(item_data.get("name", ""))
+        item_type = item_data.get("type")
         color_id = detail.get("color_id")
         color_name = detail.get("color_name")
         quantity = detail.get("quantity")
-        condition = "Used (like new)" if detail.get("new_or_used") == "U" else "New"
-        unit_price = detail.get('unit_price')  # ✅ Raw API value, no formatting
+        condition = "Used" if detail.get("new_or_used") == "U" else "New"
+        unit_price = f"{detail.get('unit_price')} AUD"
 
         image_link = f"https://img.bricklink.com/ItemImage/PN/{color_id}/{item_no}.png"
-        product_link = f"https://store.bricklink.com/luke.donohoe#/shop?o={{\"q\":\"{inventory_id}\",\"sort\":0,\"pgSize\":100,\"showHomeItems\":0}}"
+        link = f"https://store.bricklink.com/luke.donohoe#/shop?o={{\"q\":\"{inventory_id}\",\"sort\":0,\"pgSize\":100,\"showHomeItems\":0}}"
 
         rows.append({
             "id": inventory_id,
@@ -59,7 +55,7 @@ def generate_feed():
             "availability": "In Stock",
             "condition": condition,
             "price": unit_price,
-            "link": product_link,
+            "link": link,
             "image_link": image_link,
             "brand": "Lego",
             "google_product_category": "3287",
@@ -78,10 +74,10 @@ def generate_feed():
         writer.writeheader()
         writer.writerows(rows)
 
-    # Write GitHub Pages redirect
+    # GitHub Pages redirect
     with open("index.html", "w") as f:
         f.write("<!DOCTYPE html><html><head><meta http-equiv='refresh' content='0; url=meta_product_feed.csv'></head><body></body></html>")
 
-# Run the generator
+# Run it
 if __name__ == "__main__":
     generate_feed()
