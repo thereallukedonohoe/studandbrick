@@ -47,7 +47,7 @@ def generate_feed():
         color_name = detail.get("color_name")
         quantity = detail.get("quantity")
         condition = "Used (like new)" if detail.get("new_or_used") == "U" else "New"
-        unit_price = f"{float(detail.get('unit_price')):.2f} AUD"
+        unit_price = f"{float(detail.get('unit_price')):.2f}"  # ✅ No AUD
 
         image_link = f"https://img.bricklink.com/ItemImage/PN/{color_id}/{item_no}.png"
         product_link = f"https://store.bricklink.com/luke.donohoe#/shop?o={{\"q\":\"{inventory_id}\",\"sort\":0,\"pgSize\":100,\"showHomeItems\":0}}"
