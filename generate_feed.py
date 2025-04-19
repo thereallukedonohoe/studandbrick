@@ -46,7 +46,6 @@ def generate_feed():
         if unit_price_val < 1.00:
             continue  # ✅ Skip items under $1.00
 
-        # ✅ First valid item
         item_data = detail.get("item", {})
         item_no = item_data.get("no")
         item_name = unescape(item_data.get("name", ""))
@@ -55,7 +54,7 @@ def generate_feed():
         color_name = detail.get("color_name")
         quantity = detail.get("quantity")
         condition = "Used" if detail.get("new_or_used") == "U" else "New"
-        price = f"{float(detail.get('unit_price')):.2f} AUD"  # ✅ Meta-friendly
+        price = f"{float(detail.get('unit_price')):.2f} AUD"
 
         image_link = f"https://img.bricklink.com/ItemImage/PN/{color_id}/{item_no}.png"
         link = f"https://store.bricklink.com/luke.donohoe#/shop?o={{\"q\":\"{inventory_id}\",\"sort\":0,\"pgSize\":100,\"showHomeItems\":0}}"
@@ -75,8 +74,6 @@ def generate_feed():
             "color": color_name,
             "quantity_to_sell_on_facebook": quantity
         })
-
-        break  # ✅ Stop after first qualifying item
 
     # Write to CSV
     with open("meta_product_feed.csv", "w", newline='', encoding="utf-8") as f:
