@@ -16,7 +16,7 @@ def get_inventory():
     if r.status_code != 200:
         print("❌ Error fetching inventory")
         return []
-    return r.json().get("data", [])[:5]  # ✅ Limit to 5 items for testing
+    return r.json().get("data", [])[:5]  # ✅ Limit to 5 items
 
 def get_inventory_detail(inventory_id):
     r = requests.get(f"https://api.bricklink.com/api/store/v1/inventories/{inventory_id}", auth=auth)
@@ -34,6 +34,14 @@ def generate_feed():
         detail = get_inventory_detail(inventory_id)
         if not detail:
             continue
+
+        try:
+            unit_price_val = float(detail.get("unit_price"))
+        except (ValueError, TypeError):
+            continue
+
+        if unit_price_val < 1.00:
+            continue  # ❌ Skip items under $1.00
 
         item_data = detail.get("item", {})
         item_no = item_data.get("no")
