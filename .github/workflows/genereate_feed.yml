@@ -20,8 +20,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install requests requests-oauthlib playwright
-          playwright install
+          pip install requests requests-oauthlib
 
       - name: Generate feed from BrickLink
         run: python generate_feed.py
@@ -30,12 +29,6 @@ jobs:
           BL_CONSUMER_SECRET: ${{ secrets.BL_CONSUMER_SECRET }}
           BL_TOKEN_VALUE: ${{ secrets.BL_TOKEN_VALUE }}
           BL_TOKEN_SECRET: ${{ secrets.BL_TOKEN_SECRET }}
-
-      - name: Scrape accurate image/title/color
-        run: python scrape_listing_data.py
-
-      - name: Finalise feed
-        run: mv meta_product_feed_with_images.csv meta_product_feed.csv
 
       - name: Commit and push feed to main
         env:
