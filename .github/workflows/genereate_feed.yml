@@ -20,7 +20,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install aiohttp requests-oauthlib
+          pip install requests requests-oauthlib
 
       - name: Generate feed from BrickLink
         run: python generate_feed.py
