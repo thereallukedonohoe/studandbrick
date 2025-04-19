@@ -12,11 +12,12 @@ auth = OAuth1(
 )
 
 def get_inventory():
-    r = requests.get("https://api.bricklink.com/api/store/v1/inventories?page=1", auth=auth)
+    page = 1
+    r = requests.get(f"https://api.bricklink.com/api/store/v1/inventories?page={page}", auth=auth)
     if r.status_code != 200:
         print("❌ Error fetching inventory")
         return []
-    return r.json().get("data", [])[:5]  # ✅ Limit to 5 items
+    return r.json().get("data", [])
 
 def get_inventory_detail(inventory_id):
     r = requests.get(f"https://api.bricklink.com/api/store/v1/inventories/{inventory_id}", auth=auth)
@@ -41,8 +42,9 @@ def generate_feed():
             continue
 
         if unit_price_val < 1.00:
-            continue  # ❌ Skip items under $1.00
+            continue  # skip
 
+        # ✅ First item that meets condition
         item_data = detail.get("item", {})
         item_no = item_data.get("no")
         item_name = unescape(item_data.get("name", ""))
@@ -71,6 +73,8 @@ def generate_feed():
             "color": color_name,
             "quantity_to_sell_on_facebook": quantity
         })
+
+        break  # ✅ stop after first valid match
 
     # Write to CSV
     with open("meta_product_feed.csv", "w", newline='', encoding="utf-8") as f:
