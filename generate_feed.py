@@ -1,6 +1,7 @@
 import csv
 import asyncio
 import aiohttp
+import requests  # ✅ Needed for OAuth1 headers
 from requests_oauthlib import OAuth1
 from html import unescape
 
@@ -11,9 +12,6 @@ TOKEN_VALUE = '4594AC48B120458D8A798316A043D723'
 TOKEN_SECRET = '7FA7BD09FB034CA09FCA9A542A24361D'
 
 API_BASE = "https://api.bricklink.com/api/store/v1"
-
-# OAuth1 setup for aiohttp
-auth = OAuth1(CONSUMER_KEY, CONSUMER_SECRET, TOKEN_VALUE, TOKEN_SECRET)
 
 # Convert requests_oauthlib auth to headers for aiohttp
 def oauth_headers():
