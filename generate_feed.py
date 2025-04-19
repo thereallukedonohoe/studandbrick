@@ -36,7 +36,7 @@ def generate_feed():
             continue
 
         if detail.get("is_stock_room") is not False:
-            continue  # ❌ Only include items where is_stock_room is explicitly False
+            continue  # ✅ Only include publicly listed items
 
         try:
             unit_price_val = float(detail.get("unit_price"))
@@ -44,9 +44,9 @@ def generate_feed():
             continue
 
         if unit_price_val < 1.00:
-            continue  # ❌ Skip items under $1.00
+            continue  # ✅ Skip items under $1.00
 
-        # ✅ First qualifying item
+        # ✅ First valid item
         item_data = detail.get("item", {})
         item_no = item_data.get("no")
         item_name = unescape(item_data.get("name", ""))
@@ -55,7 +55,7 @@ def generate_feed():
         color_name = detail.get("color_name")
         quantity = detail.get("quantity")
         condition = "Used" if detail.get("new_or_used") == "U" else "New"
-        unit_price = f"{detail.get('unit_price')} AUD"
+        price = f"{float(detail.get('unit_price')):.2f} AUD"  # ✅ Meta-friendly
 
         image_link = f"https://img.bricklink.com/ItemImage/PN/{color_id}/{item_no}.png"
         link = f"https://store.bricklink.com/luke.donohoe#/shop?o={{\"q\":\"{inventory_id}\",\"sort\":0,\"pgSize\":100,\"showHomeItems\":0}}"
@@ -66,7 +66,7 @@ def generate_feed():
             "description": f"{item_type} {item_no}",
             "availability": "In Stock",
             "condition": condition,
-            "price": unit_price,
+            "price": price,
             "link": link,
             "image_link": image_link,
             "brand": "Lego",
@@ -76,7 +76,7 @@ def generate_feed():
             "quantity_to_sell_on_facebook": quantity
         })
 
-        break  # ✅ Stop after first valid match
+        break  # ✅ Stop after first qualifying item
 
     # Write to CSV
     with open("meta_product_feed.csv", "w", newline='', encoding="utf-8") as f:
