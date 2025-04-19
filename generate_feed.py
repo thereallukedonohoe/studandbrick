@@ -1,7 +1,7 @@
 import csv
 import asyncio
 import aiohttp
-import requests  # ✅ Needed for OAuth1 headers
+import requests
 from requests_oauthlib import OAuth1
 from html import unescape
 
@@ -18,7 +18,7 @@ def oauth_headers():
     from requests_oauthlib.oauth1_auth import SIGNATURE_TYPE_AUTH_HEADER
     header_auth = OAuth1(CONSUMER_KEY, CONSUMER_SECRET, TOKEN_VALUE, TOKEN_SECRET, signature_type=SIGNATURE_TYPE_AUTH_HEADER)
     req = header_auth.__call__(requests.Request("GET", API_BASE).prepare())
-    return {"Authorization": req.headers["Authorization"]}
+    return dict(req.headers)  # ✅ Fix: ensure aiohttp can serialize the headers
 
 async def fetch_inventory():
     async with aiohttp.ClientSession() as session:
