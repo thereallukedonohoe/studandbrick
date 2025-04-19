@@ -13,16 +13,18 @@ TOKEN_SECRET = '7FA7BD09FB034CA09FCA9A542A24361D'
 
 API_BASE = "https://api.bricklink.com/api/store/v1"
 
-# Convert requests_oauthlib auth to headers for aiohttp
-def oauth_headers():
+# Fix: Generate a clean Authorization header for aiohttp
+def get_auth_header(url):
     from requests_oauthlib.oauth1_auth import SIGNATURE_TYPE_AUTH_HEADER
-    header_auth = OAuth1(CONSUMER_KEY, CONSUMER_SECRET, TOKEN_VALUE, TOKEN_SECRET, signature_type=SIGNATURE_TYPE_AUTH_HEADER)
-    req = header_auth.__call__(requests.Request("GET", API_BASE).prepare())
-    return dict(req.headers)  # ✅ Fix: ensure aiohttp can serialize the headers
+    oauth = OAuth1(CONSUMER_KEY, CONSUMER_SECRET, TOKEN_VALUE, TOKEN_SECRET, signature_type=SIGNATURE_TYPE_AUTH_HEADER)
+    dummy = requests.Request('GET', url).prepare()
+    signed = oauth(dummy)
+    return {'Authorization': signed.headers['Authorization']}
 
 async def fetch_inventory():
+    url = f"{API_BASE}/inventories?page=1"
     async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_BASE}/inventories?page=1", headers=oauth_headers()) as r:
+        async with session.get(url, headers=get_auth_header(url)) as r:
             if r.status != 200:
                 print("❌ Failed to fetch inventory list")
                 return []
@@ -30,8 +32,9 @@ async def fetch_inventory():
             return data.get("data", [])
 
 async def fetch_item_detail(session, inventory_id):
+    url = f"{API_BASE}/inventories/{inventory_id}"
     try:
-        async with session.get(f"{API_BASE}/inventories/{inventory_id}", headers=oauth_headers()) as r:
+        async with session.get(url, headers=get_auth_header(url)) as r:
             if r.status != 200:
                 return None
             detail = await r.json()
