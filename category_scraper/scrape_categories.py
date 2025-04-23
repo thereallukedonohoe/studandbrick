@@ -1,5 +1,6 @@
 # category_scraper/scrape_categories.py
 import csv
+import os
 import asyncio
 from playwright.async_api import async_playwright
 
@@ -42,6 +43,9 @@ async def scrape():
             page_number += 1
 
         await browser.close()
+
+        # Ensure output directory exists
+        os.makedirs("category_scraper/output", exist_ok=True)
 
         # Save to CSV
         with open(OUTPUT_FILE, "w", newline="", encoding="utf-8") as f:
