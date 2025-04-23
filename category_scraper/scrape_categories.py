@@ -19,6 +19,11 @@ async def scrape():
             print(f"Scraping page {page_number}")
             rows = await page.query_selector_all("table.catalog-category tbody tr")
 
+            print(f"Found {len(rows)} rows on page {page_number}")
+            if len(rows) <= 1:
+                print("No data rows found. Exiting...")
+                break
+
             for row in rows[1:]:  # Skip header row
                 cells = await row.query_selector_all("td")
                 if len(cells) < 4:
@@ -43,6 +48,9 @@ async def scrape():
             page_number += 1
 
         await browser.close()
+
+        if not results:
+            raise RuntimeError("No data scraped. Check if the page structure has changed or scraping was blocked.")
 
         # Ensure output directory exists
         os.makedirs("category_scraper/output", exist_ok=True)
