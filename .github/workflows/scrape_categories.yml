@@ -2,8 +2,8 @@ name: Scrape BrickLink Categories
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '18 18 * * *' # 2am AWST daily
+  # schedule:
+  #   - cron: '18 18 * * *' # 2am AWST daily
 
 jobs:
   scrape:
